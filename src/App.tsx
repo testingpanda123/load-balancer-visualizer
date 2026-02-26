@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Badge, Dialog } from '@cloudflare/kumo';
+import { Button, Badge } from '@cloudflare/kumo';
 import { 
   Globe, 
   Layers,
@@ -28,7 +28,7 @@ function App() {
   const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null);
   const [showMonitors, setShowMonitors] = useState(true);
   const [showCodeView, setShowCodeView] = useState(false);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [animationKey] = useState(0);
 
   const selectedPool = pools.find(p => p.id === selectedPoolId);
   const selectedMonitorGroup = selectedPool?.monitorGroupId 

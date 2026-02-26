@@ -1,7 +1,7 @@
-import type { Pool, Endpoint, Monitor, HealthStatus, MonitorGroup } from '../types';
+import type { Pool, Endpoint, HealthStatus, MonitorGroup } from '../types';
 
 export function getEndpointHealth(
-  pool: Pool,
+  _pool: Pool,
   endpoint: Endpoint,
   monitorGroup?: MonitorGroup
 ): HealthStatus {
