@@ -11,3 +11,12 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Custom border with specific colors for light/dark mode */
+.border-custom {
+  border-color: rgb(229 229 229); /* Light mode: subtle light gray */
+}
+
+[data-mode="dark"] .border-custom {
+  border-color: rgb(69 69 69); /* Dark mode: medium gray */
+}
