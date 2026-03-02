@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@cloudflare/kumo';
 import { 
-  Globe, 
   Layers,
   Activity,
-  Users,
   Server,
   Database,
   HeartPulse,
@@ -13,7 +10,6 @@ import {
   Info,
   AlertTriangle,
   ShieldCheck,
-  ArrowLeft,
   Code,
   Sun,
   Moon
@@ -22,16 +18,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Pool, SteeringMethod, MonitorGroup } from './types';
 import { defaultConfig } from './data/mockData';
 import { getEndpointHealth, getPoolHealth, getHealthColor } from './utils/healthCalculations';
+import { LoadBalancerDiagram } from './components/LoadBalancerDiagram';
 
 function App() {
   const [pools, setPools] = useState<Pool[]>(defaultConfig.pools);
   const [monitorGroups] = useState<MonitorGroup[]>(defaultConfig.monitorGroups);
-  const [steeringMethod, setSteeringMethod] = useState<SteeringMethod>('geo');
+  const [steeringMethod, setSteeringMethod] = useState<SteeringMethod>('off');
   const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null);
   const [showMonitors, setShowMonitors] = useState(true);
   const [showCodeView, setShowCodeView] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
-  const [animationKey] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
@@ -144,80 +140,90 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-kumo-base font-sans text-kumo-default overflow-hidden">
       {/* Top Header Bar */}
-      <header className="bg-kumo-surface/80 backdrop-blur-md border-b border-custom px-6 py-4 flex justify-between items-center shrink-0 z-[100]">
-        <div className="flex items-center gap-3">
-          <div className="bg-kumo-brand p-2 rounded-xl shadow-lg">
-            <Globe className="text-white w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold leading-tight">Cloudflare Load Balancing</h1>
-            <p className="text-[10px] text-kumo-subtle uppercase tracking-widest font-semibold">
-              Monitor Group Architecture
-            </p>
-          </div>
+      <header className="bg-kumo-elevated backdrop-blur-md border-b border-custom px-6 py-5 flex justify-between items-center shrink-0 z-[100]">
+        <div>
+          <h1 className="text-2xl font-bold leading-tight mb-1">Cloudflare Load Balancer Visualizer</h1>
+          <h2 className="text-sm font-semibold text-kumo-default mb-1">
+            Visualize traffic distribution from the Edge to your Origins.
+          </h2>
+          <p className="text-xs text-kumo-subtle leading-relaxed max-w-2xl">
+            Use this tool to simulate steering policies, monitor pool health, and track request flow across the network.
+          </p>
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button
+        <div className="flex gap-2">
+          <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            variant="secondary"
-            shape="square"
-            icon={isDarkMode ? Sun : Moon}
+            className="px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 bg-kumo-elevated border border-custom text-kumo-subtle hover:text-kumo-default"
             aria-label="Toggle theme"
-          />
-          <Button
+          >
+            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {isDarkMode ? 'Light' : 'Dark'}
+          </button>
+          <button
             onClick={() => setShowCodeView(!showCodeView)}
-            variant={showCodeView ? 'primary' : 'secondary'}
-            shape="square"
-            icon={Code}
+            className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 border ${
+              showCodeView
+                ? 'bg-kumo-brand text-white font-bold border-kumo-brand'
+                : 'bg-kumo-elevated border-custom text-kumo-subtle hover:text-kumo-default'
+            }`}
             aria-label="Toggle code view"
-          />
+          >
+            <Code className="w-4 h-4" />
+            Code
+          </button>
         </div>
       </header>
 
       {/* Secondary Toolbar */}
-      <div className="bg-kumo-surface/50 border-b border-custom px-6 py-3 flex justify-between items-center shrink-0">
+      <div className="bg-kumo-elevated border-b border-custom px-6 py-3 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-4">
-          <div className="flex bg-kumo-surface/50 p-1 rounded-lg border border-custom">
-            {(['geo', 'dynamic'] as SteeringMethod[]).map(m => (
+          <div className="flex bg-kumo-elevated p-1 rounded-lg border border-custom">
+            {(['off', 'random', 'geo', 'dynamic', 'proximity', 'least-outstanding-requests'] as SteeringMethod[]).map(m => (
               <button
                 key={m}
                 onClick={() => setSteeringMethod(m)}
-                className={`px-3 py-1.5 text-xs rounded-md transition-all capitalize ${
+                className={`px-3 py-1.5 text-xs rounded-md transition-all ${
                   steeringMethod === m 
                     ? 'bg-kumo-brand text-white font-bold' 
                     : 'text-kumo-subtle hover:text-kumo-default'
                 }`}
               >
-                {m.charAt(0).toUpperCase() + m.slice(1)}
+                {m === 'off' ? 'Off' : m === 'least-outstanding-requests' ? 'LOR' : m.charAt(0).toUpperCase() + m.slice(1)}
               </button>
             ))}
           </div>
-          <div className="h-6 w-px bg-kumo-line mx-2" />
-          <button
-            onClick={() => setShowMonitors(!showMonitors)}
-            className={`p-2 rounded-lg border transition-all ${
-              showMonitors 
-                ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400' 
-                : 'border-custom text-kumo-subtle'
-            }`}
-          >
-            <HeartPulse className="w-5 h-5" />
-          </button>
         </div>
         
-        <Button
-          variant={showLegend ? 'primary' : 'secondary'}
-          icon={Layers}
-          onClick={() => setShowLegend(!showLegend)}
-        >
-          Legend
-        </Button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowMonitors(!showMonitors)}
+            className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 border ${
+              showMonitors
+                ? 'bg-kumo-brand text-white font-bold border-kumo-brand'
+                : 'bg-kumo-elevated border-custom text-kumo-subtle hover:text-kumo-default'
+            }`}
+          >
+            <HeartPulse className="w-4 h-4" />
+            Monitors
+          </button>
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 border ${
+              showLegend
+                ? 'bg-kumo-brand text-white font-bold border-kumo-brand'
+                : 'bg-kumo-elevated border-custom text-kumo-subtle hover:text-kumo-default'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            Legend
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Control Panel */}
-        <aside className="w-80 border-r border-custom p-6 overflow-y-auto shrink-0 bg-kumo-surface/50">
+        <aside className="w-80 border-r border-custom p-6 overflow-y-auto shrink-0 bg-kumo-elevated">
           <h2 className="text-[10px] font-bold text-kumo-subtle uppercase tracking-widest mb-4">
             Active Pools
           </h2>
@@ -366,7 +372,7 @@ function App() {
         </aside>
 
         {/* Main Visualization Area */}
-        <section className="flex-1 relative bg-kumo-base overflow-hidden">
+        <section className="flex-1 relative bg-kumo-tint overflow-hidden">
           <AnimatePresence mode="wait">
             {showCodeView ? (
               <motion.div
@@ -392,121 +398,15 @@ function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full flex flex-col items-center justify-center p-10"
+                className="h-full"
               >
-                <div className="relative w-full max-w-5xl aspect-[16/8] flex items-center justify-between">
-                  <div className="flex flex-col items-center gap-3 z-10">
-                    <div className="p-3 bg-blue-500/10 rounded-full border border-blue-400/20">
-                      <Users className="w-8 h-8 text-blue-400" />
-                    </div>
-                    <span className="text-[9px] font-bold text-kumo-subtle uppercase tracking-widest">Global Ingress</span>
-                  </div>
-
-                  <div className="flex-1 h-px bg-kumo-line mx-4 relative">
-                    <motion.div
-                      key={`traffic-${animationKey}`}
-                      className="absolute top-0 left-0 w-3 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_#3b82f6]"
-                      animate={{ left: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                    />
-                  </div>
-
-                  <div className="relative flex flex-col items-center gap-4 z-10">
-                    <div className="w-28 h-28 rounded-3xl bg-kumo-brand flex flex-col items-center justify-center text-white shadow-2xl border-4 border-orange-400/20">
-                      <Activity className="w-8 h-8 mb-1" />
-                      <span className="text-[10px] font-black uppercase tracking-tighter">Cloudflare Edge</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 relative mx-6 h-full flex flex-col justify-around py-12">
-                    {pools.map((pool, idx) => {
-                      const monitorGroup = pool.monitorGroupId 
-                        ? monitorGroups.find(mg => mg.id === pool.monitorGroupId)
-                        : undefined;
-                      const health = getPoolHealth(pool, monitorGroup);
-                      const healthiestPool = getHealthiestPool();
-                      const isActiveRoute = steeringMethod === 'dynamic' 
-                        ? healthiestPool?.id === pool.id
-                        : health === 'healthy';
-                      
-                      return (
-                        <div key={pool.id} className="relative h-px w-full bg-kumo-line/50">
-                          {health !== 'critical' && isActiveRoute && (
-                            <motion.div
-                              key={`pkt-${pool.id}-${animationKey}`}
-                              className={`absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full ${
-                                health === 'healthy' 
-                                  ? 'bg-green-400 shadow-[0_0_10px_#4ade80]' 
-                                  : 'bg-yellow-400'
-                              }`}
-                              animate={{ left: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
-                              transition={{ 
-                                duration: 3, 
-                                repeat: Infinity, 
-                                ease: 'linear',
-                                delay: idx * 0.2 
-                              }}
-                            />
-                          )}
-                          {showMonitors && (
-                            <motion.div
-                              className={`absolute top-1/2 -translate-y-1/2 left-0 w-1.5 h-1.5 rounded-full opacity-50 ${
-                                pool.monitorGroupId ? 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]' : 'bg-pink-400 shadow-[0_0_8px_#f472b6]'
-                              }`}
-                              animate={{ left: ['0%', '100%'], opacity: [0, 0.5, 0.5, 0] }}
-                              transition={{ 
-                                duration: 1.5, 
-                                repeat: Infinity, 
-                                ease: 'linear',
-                                delay: idx * 0.4 
-                              }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex flex-col justify-around h-full py-4 gap-6">
-                    {pools.map(pool => {
-                      const monitorGroup = pool.monitorGroupId 
-                        ? monitorGroups.find(mg => mg.id === pool.monitorGroupId)
-                        : undefined;
-                      const health = getPoolHealth(pool, monitorGroup);
-                      
-                      return (
-                        <div
-                          key={pool.id}
-                          onClick={() => setSelectedPoolId(pool.id)}
-                          className={`w-48 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                            health === 'healthy' 
-                              ? 'bg-kumo-surface border-green-500/20 shadow-lg shadow-green-500/5' 
-                              : health === 'degraded' 
-                              ? 'border-yellow-500/20' 
-                              : 'bg-kumo-base border-red-900 opacity-60'
-                          } hover:scale-105 hover:bg-kumo-surface/80`}
-                        >
-                          <div className="flex justify-between items-center mb-1">
-                            <h4 className="text-xs font-bold truncate">{pool.name}</h4>
-                            {pool.monitorGroupId && <Layers className="w-3 h-3 text-cyan-400" />}
-                          </div>
-                          <div className="text-[9px] text-kumo-subtle uppercase tracking-tighter mb-3">{pool.latency} avg RTT</div>
-                          <div className="flex gap-1.5">
-                            {pool.endpoints.map(ep => {
-                              const epHealth = getEndpointHealth(pool, ep, monitorGroup);
-                              return (
-                                <div 
-                                  key={ep.id} 
-                                  className={`flex-1 h-1 rounded-full transition-colors duration-500 ${getHealthColor(epHealth)}`} 
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <LoadBalancerDiagram
+                  pools={pools}
+                  monitorGroups={monitorGroups}
+                  steeringMethod={steeringMethod}
+                  onPoolClick={(poolId) => setSelectedPoolId(poolId)}
+                  showMonitors={showMonitors}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -520,15 +420,69 @@ function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-80 border-l border-custom p-6 overflow-y-auto shrink-0 bg-kumo-surface/50"
+              className="w-80 border-l border-custom p-6 overflow-y-auto shrink-0 bg-kumo-elevated"
             >
+              <h2 className="text-[10px] font-bold text-kumo-subtle uppercase tracking-widest mb-4">
+                Traffic Flow
+              </h2>
+              <div className="space-y-3 mb-6">
+                {[
+                  { 
+                    id: 'healthy', 
+                    title: 'Healthy Traffic', 
+                    icon: <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />, 
+                    color: 'text-green-400', 
+                    desc: 'Green dots indicate traffic flowing to healthy pools and endpoints.' 
+                  },
+                  { 
+                    id: 'degraded', 
+                    title: 'Degraded Traffic', 
+                    icon: <div className="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]" />, 
+                    color: 'text-yellow-400', 
+                    desc: 'Yellow dots indicate traffic to degraded pools or endpoints with partial health issues.' 
+                  },
+                  { 
+                    id: 'critical', 
+                    title: 'No Traffic', 
+                    icon: <div className="w-3 h-3 rounded-full bg-red-400 opacity-30" />, 
+                    color: 'text-red-400', 
+                    desc: 'Critical pools and endpoints receive no traffic and show no flow animation.' 
+                  },
+                  { 
+                    id: 'monitor-group', 
+                    title: 'Monitor Group Probe', 
+                    icon: <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.5)]" />, 
+                    color: 'text-cyan-400', 
+                    desc: 'Small cyan dots show health check probes running for monitor group endpoints.' 
+                  },
+                  { 
+                    id: 'standard-probe', 
+                    title: 'Standard Probe', 
+                    icon: <div className="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_6px_rgba(244,114,182,0.5)]" />, 
+                    color: 'text-pink-400', 
+                    desc: 'Small pink dots show health check probes for standard endpoints without monitor groups.' 
+                  }
+                ].map((status) => (
+                  <div 
+                    key={status.id} 
+                    className="p-3 rounded-xl border bg-kumo-control/30 border-custom shadow-sm transition-all"
+                  >
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="flex items-center justify-center w-6">{status.icon}</div>
+                      <span className="text-sm font-bold">{status.title}</span>
+                    </div>
+                    <p className="text-[11px] text-kumo-subtle leading-relaxed">{status.desc}</p>
+                  </div>
+                ))}
+              </div>
+
               <h2 className="text-[10px] font-bold text-kumo-subtle uppercase tracking-widest mb-4">
                 Monitor Logic
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-3 mb-6">
                 {[
                   { 
-                    id: 'critical', 
+                    id: 'critical-override', 
                     title: 'Critical Override', 
                     icon: <AlertTriangle className="w-5 h-5" />, 
                     color: 'text-red-400', 
@@ -561,19 +515,78 @@ function App() {
                   </div>
                 ))}
               </div>
+
+              <h2 className="text-[10px] font-bold text-kumo-subtle uppercase tracking-widest mb-4">
+                Traffic Steering Methods
+              </h2>
+              <div className="space-y-3">
+                {[
+                  {
+                    id: 'off',
+                    title: 'Off (Failover)',
+                    desc: 'Routes traffic to pools in order until a healthy one is found. This is active-passive failover where only the first healthy pool receives traffic.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/standard-options/'
+                  },
+                  {
+                    id: 'random',
+                    title: 'Random',
+                    desc: 'Distributes traffic equally across all healthy pools in a round-robin fashion. This enables active-active failover where traffic is split between multiple pools.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/standard-options/'
+                  },
+                  {
+                    id: 'geo',
+                    title: 'Geo Steering',
+                    desc: 'Routes traffic based on the geographic location of the visitor. Pools are assigned to specific countries, regions, or data centers to serve users from the closest location.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/geo-steering/'
+                  },
+                  {
+                    id: 'dynamic',
+                    title: 'Dynamic Steering',
+                    desc: 'Uses health monitor data to route traffic to the fastest pool based on Round Trip Time (RTT). Cloudflare automatically selects the pool with the lowest latency for each region.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/dynamic-steering/'
+                  },
+                  {
+                    id: 'proximity',
+                    title: 'Proximity Steering',
+                    desc: 'Routes visitors to the closest physical data center based on GPS coordinates. Each pool must have latitude/longitude coordinates configured for this method to work.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/proximity-steering/'
+                  },
+                  {
+                    id: 'lor',
+                    title: 'Least Outstanding Requests',
+                    desc: 'Routes traffic to pools with the lowest number of pending requests. This method is ideal for applications that can be easily overwhelmed by concurrent request spikes.',
+                    link: 'https://developers.cloudflare.com/load-balancing/understand-basics/traffic-steering/steering-policies/least-outstanding-requests/'
+                  }
+                ].map((method) => (
+                  <div 
+                    key={method.id} 
+                    className="p-3 rounded-xl border bg-kumo-control/30 border-custom shadow-sm transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold">{method.title}</span>
+                      <a
+                        href={method.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                        title="View documentation"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-[11px] text-kumo-subtle leading-relaxed">{method.desc}</p>
+                  </div>
+                ))}
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
       </div>
 
-      <footer className="bg-kumo-surface/50 border-t border-custom px-8 py-3 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-kumo-subtle shrink-0">
+      <footer className="bg-kumo-elevated border-t border-custom px-8 py-3 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-kumo-subtle shrink-0">
         <div className="flex gap-8 items-center">
-          <div className="flex items-center gap-2">
-            <Layers className="w-3 h-3 text-cyan-400" /> Monitor Group Probe
-          </div>
-          <div className="flex items-center gap-2">
-            <HeartPulse className="w-3 h-3 text-pink-400" /> Standard Probe
-          </div>
           {steeringMethod === 'dynamic' && getHealthiestPool() && (
             <div className="flex items-center gap-2 text-blue-400">
               <Activity className="w-3 h-3" /> Dynamic: Routing to {getHealthiestPool()?.name}

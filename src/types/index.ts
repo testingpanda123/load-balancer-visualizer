@@ -1,6 +1,6 @@
 export type HealthStatus = 'healthy' | 'degraded' | 'critical';
 
-export type SteeringMethod = 'geo' | 'dynamic' | 'random' | 'proximity';
+export type SteeringMethod = 'off' | 'random' | 'geo' | 'dynamic' | 'proximity' | 'least-outstanding-requests';
 
 export interface Monitor {
   id: string;
