@@ -19,6 +19,8 @@ import type { Pool, SteeringMethod, MonitorGroup } from './types';
 import { defaultConfig } from './data/mockData';
 import { getEndpointHealth, getPoolHealth, getHealthColor } from './utils/healthCalculations';
 import { LoadBalancerDiagram } from './components/LoadBalancerDiagram';
+import { FlowLoadBalancerDiagram } from './components/FlowLoadBalancerDiagram';
+import { SankeyLoadBalancerDiagram } from './components/SankeyLoadBalancerDiagram';
 
 function App() {
   const [pools, setPools] = useState<Pool[]>(defaultConfig.pools);
@@ -29,6 +31,7 @@ function App() {
   const [showCodeView, setShowCodeView] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [diagramType, setDiagramType] = useState<'original' | 'flow' | 'sankey'>('original');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-mode', isDarkMode ? 'dark' : 'light');
@@ -196,6 +199,15 @@ function App() {
         </div>
         
         <div className="flex gap-2">
+          <select
+            value={diagramType}
+            onChange={(e) => setDiagramType(e.target.value as 'original' | 'flow' | 'sankey')}
+            className="px-3 py-1.5 text-xs rounded-md transition-all border bg-kumo-elevated border-custom text-kumo-default hover:bg-kumo-control cursor-pointer"
+          >
+            <option value="original">Original View</option>
+            <option value="flow">Flow View</option>
+            <option value="sankey">Sankey View</option>
+          </select>
           <button
             onClick={() => setShowMonitors(!showMonitors)}
             className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-2 border ${
@@ -393,21 +405,41 @@ function App() {
                 </div>
               </motion.div>
             ) : (
-              <motion.div
-                key="global-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-full"
-              >
-                <LoadBalancerDiagram
-                  pools={pools}
-                  monitorGroups={monitorGroups}
-                  steeringMethod={steeringMethod}
-                  onPoolClick={(poolId) => setSelectedPoolId(poolId)}
-                  showMonitors={showMonitors}
-                />
-              </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key="diagram"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-full"
+                >
+                  {diagramType === 'flow' ? (
+                    <FlowLoadBalancerDiagram
+                      pools={pools}
+                      monitorGroups={monitorGroups}
+                      steeringMethod={steeringMethod}
+                      onPoolClick={(poolId) => setSelectedPoolId(poolId)}
+                      showMonitors={showMonitors}
+                      className="h-full"
+                    />
+                  ) : diagramType === 'sankey' ? (
+                    <SankeyLoadBalancerDiagram
+                      pools={pools}
+                      monitorGroups={monitorGroups}
+                      steeringMethod={steeringMethod}
+                      className="h-full"
+                    />
+                  ) : (
+                    <LoadBalancerDiagram
+                      pools={pools}
+                      monitorGroups={monitorGroups}
+                      steeringMethod={steeringMethod}
+                      onPoolClick={(poolId) => setSelectedPoolId(poolId)}
+                      showMonitors={showMonitors}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             )}
           </AnimatePresence>
         </section>

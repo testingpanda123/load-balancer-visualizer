@@ -225,7 +225,7 @@ export function LoadBalancerDiagram({
 
         {/* Main content */}
         <div className="col-start-1 row-start-1 relative flex items-center justify-center py-6 px-4 sm:px-6">
-          <div className="flex gap-16">
+          <div className="flex gap-8">
             {/* Layer 1: User Request */}
             <div className="relative z-10 w-fit flex flex-col items-center">
               <Pill>
@@ -239,7 +239,7 @@ export function LoadBalancerDiagram({
 
             {/* Connections to pools */}
             <svg
-              width="64"
+              width="32"
               height={
                 poolCount * SMALL_PILL_HEIGHT +
                 (poolCount - 1) * NODE_GAP +
@@ -263,7 +263,7 @@ export function LoadBalancerDiagram({
                   <g key={i}>
                     <path
                       id={pathId}
-                      d={`M 0 21 C 32 21 32 ${height} 64 ${height}`}
+                      d={`M 0 21 C 16 21 16 ${height} 32 ${height}`}
                     />
                     {health !== 'critical' && isActive && (
                       <motion.circle
@@ -320,7 +320,7 @@ export function LoadBalancerDiagram({
 
             {/* Connections to endpoints */}
             <svg
-              width="64"
+              width="32"
               height={
                 totalEndpoints * SMALL_PILL_HEIGHT +
                 (totalEndpoints - 1) * NODE_GAP +
@@ -352,7 +352,7 @@ export function LoadBalancerDiagram({
                     <g key={`${pool.id}-${endpointIdx}`}>
                       <path
                         id={pathId}
-                        d={`M 0 ${poolHeight} C 32 ${poolHeight} 32 ${endpointHeight} 64 ${endpointHeight}`}
+                        d={`M 0 ${poolHeight} C 16 ${poolHeight} 16 ${endpointHeight} 32 ${endpointHeight}`}
                       />
                       {poolHealth !== 'critical' && endpointHealth !== 'critical' && isPoolActive && (
                         <motion.circle
